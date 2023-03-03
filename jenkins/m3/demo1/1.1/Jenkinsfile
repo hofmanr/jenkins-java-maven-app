@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+    tools {
+        maven 'Maven 3.8.6'
+    }
+    environment {
+        VERSION = "0.1.0"
+        VERSION_RC = "rc.2"
+    }
+    stages {
+        stage('Audit tools') {
+            steps {
+                sh '''
+                  git version
+                  docker version
+                  java -version
+                  echo "M2_HOME = ${M2_HOME}"
+                  ${M2_HOME}/bin/mvn --version
+                '''
+            }
+        }
+        stage('Build') {
+            steps {
+              echo "Building version: ${VERSION} with suffix: ${VERSION_RC}"
+              sh '${M2_HOME}/bin/mvn -B -DskipTests clean package'
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                sh '${M2_HOME}/bin/mvn test'
+            }
+            post {
+                always {
+                    dir('./target/surefire-reports') {
+                       junit '*.xml'
+                    }
+                }
+            }
+        }
+        stage('Smoke Test') {
+            steps {
+              sh 'dotnet ./m3/src/Pi.Web/bin/Debug/netcoreapp3.1/Pi.Web.dll'
+            }
+        }
+    }
+}
