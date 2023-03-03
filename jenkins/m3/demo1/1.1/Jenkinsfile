@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    options {
+        buildDiscarder logRotator( artifactNumToKeepStr: '3', daysToKeepStr: '10', numToKeepStr: '3')
+        timeout(time: 5, unit: 'MINUTES')
+    }
     tools {
         maven 'Maven 3.8.6'
     }
@@ -22,9 +26,11 @@ pipeline {
         stage('Build') {
             steps {
               echo "Building version: ${VERSION} with suffix: ${VERSION_RC}"
-              sh '${M2_HOME}/bin/mvn versions:set -DprocessAllModules -DnewVersion=${VERSION}-${VERSION_RC}'
-              sh '${M2_HOME}/bin/mvn versions:commit -DprocessAllModules'
-              sh '${M2_HOME}/bin/mvn -B -DskipTests clean package'
+              sh '''
+                 ${M2_HOME}/bin/mvn versions:set -DprocessAllModules -DnewVersion=${VERSION}-${VERSION_RC}
+                 ${M2_HOME}/bin/mvn versions:commit -DprocessAllModules
+                 ${M2_HOME}/bin/mvn -B -DskipTests clean package
+              '''
             }
         }
         stage('Unit Test') {
