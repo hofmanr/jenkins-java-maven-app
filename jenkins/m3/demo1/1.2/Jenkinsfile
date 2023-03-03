@@ -1,0 +1,71 @@
+#!groovy
+pipeline {
+    agent any
+    parameters {
+        booleanParam(name: 'RC', defaultValue: false, description: 'Is this a Release Candidate?')
+    }
+    options {
+        buildDiscarder logRotator( artifactNumToKeepStr: '3', daysToKeepStr: '10', numToKeepStr: '3')
+        timeout(time: 5, unit: 'MINUTES')
+    }
+    tools {
+        maven 'Maven 3.8.6'
+    }
+    environment {
+        VERSION = "0.1.0"
+        VERSION_RC = "rc.2"
+    }
+    stages {
+        stage('Audit tools') {
+            steps {
+                sh '''
+                  git version
+                  docker version
+                  java -version
+                  echo "M2_HOME = ${M2_HOME}"
+                  ${M2_HOME}/bin/mvn --version
+                '''
+            }
+        }
+        stage('Build') {
+            environment {
+                VERSION_SUFFIX = "${sh(script:'if [ "${RC}" == "false" ] ; then echo -n "${VERSION_RC}+ci.${BUILD_NUMBER}"; else echo -n "${VERSION_RC}"; fi', returnStdout: true)}"
+            }
+            steps {
+              echo "Building version: ${VERSION} with suffix: ${VERSION_SUFFIX}"
+              sh '''
+                 ${M2_HOME}/bin/mvn versions:set -DprocessAllModules -DnewVersion=${VERSION}-${VERSION_SUFFIX}
+                 ${M2_HOME}/bin/mvn versions:commit -DprocessAllModules
+                 ${M2_HOME}/bin/mvn -B -DskipTests clean package
+              '''
+            }
+            post {
+                // If Maven was able to run the tests, even if some of the test
+                // failed, record the test results and archive the jar file.
+                when {
+                    expression { return params.RC }
+                }
+                success {
+                    archiveArtifacts 'target/*.jar'
+                }
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                sh '${M2_HOME}/bin/mvn test'
+            }
+            post {
+                always {
+                    dir('./target/surefire-reports') {
+                       junit '*.xml'
+                    }
+                }
+            }
+        }
+        stage('Smoke Test') {
+            steps {
+              sh 'java -jar target/my-app-${VERSION}-${VERSION_SUFFIX}.jar'
+            }
+        }
+    }
+}
