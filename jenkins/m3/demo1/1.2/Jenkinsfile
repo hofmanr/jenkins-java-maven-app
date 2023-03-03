@@ -20,7 +20,6 @@ pipeline {
             steps {
                 sh '''
                   git version
-                  docker version
                   java -version
                   echo "M2_HOME = ${M2_HOME}"
                   ${M2_HOME}/bin/mvn --version
@@ -39,17 +38,17 @@ pipeline {
                  ${M2_HOME}/bin/mvn -B -DskipTests clean package
               '''
             }
-            post {
-                // If Maven was able to run the tests, even if some of the test
-                // failed, record the test results and archive the jar file.
-                success {
-                    script {
-                        if (Boolean.valueOf(params.RC)) {
-                            archiveArtifacts 'target/*.jar'
-                        }
-                    }
-                }
-            }
+//            post {
+//                // If Maven was able to run the tests, even if some of the test
+//                // failed, record the test results and archive the jar file.
+//                success {
+//                    script {
+//                        if (Boolean.valueOf(params.RC)) {
+//                            archiveArtifacts 'target/*.jar'
+//                        }
+//                    }
+//                }
+//            }
         }
         stage('Unit Test') {
             steps {
@@ -69,6 +68,14 @@ pipeline {
             }
             steps {
                 sh 'java -jar target/my-app-${VERSION}-${VERSION_SUFFIX}.jar'
+            }
+        }
+        stage('Publish') {
+            when {
+                expression { return params.RC }
+            }
+            steps {
+                archiveArtifacts 'target/*.jar'
             }
         }
     }
