@@ -32,8 +32,8 @@ pipeline {
                 VERSION_SUFFIX = "${sh(script:'if [ "${RC}" == "false" ] ; then echo -n "${VERSION_RC}+ci.${BUILD_NUMBER}"; else echo -n "${VERSION_RC}"; fi', returnStdout: true)}"
             }
             steps {
-              echo "Building version: ${VERSION} with suffix: ${VERSION_SUFFIX}"
-              sh '''
+                echo "Building version: ${VERSION} with suffix: ${VERSION_SUFFIX}"
+                sh '''
                  ${M2_HOME}/bin/mvn versions:set -DprocessAllModules -DnewVersion=${VERSION}-${VERSION_SUFFIX}
                  ${M2_HOME}/bin/mvn versions:commit -DprocessAllModules
                  ${M2_HOME}/bin/mvn -B -DskipTests clean package
@@ -44,7 +44,7 @@ pipeline {
                 // failed, record the test results and archive the jar file.
                 success {
                     script {
-                        if (${RC}) {
+                        if (Boolean.valueOf(params.RC)) {
                             archiveArtifacts 'target/*.jar'
                         }
                     }
@@ -58,14 +58,17 @@ pipeline {
             post {
                 always {
                     dir('./target/surefire-reports') {
-                       junit '*.xml'
+                        junit '*.xml'
                     }
                 }
             }
         }
         stage('Smoke Test') {
+            environment {
+                VERSION_SUFFIX = "${sh(script:'if [ "${RC}" == "false" ] ; then echo -n "${VERSION_RC}+ci.${BUILD_NUMBER}"; else echo -n "${VERSION_RC}"; fi', returnStdout: true)}"
+            }
             steps {
-              sh 'java -jar target/my-app-${VERSION}-${VERSION_SUFFIX}.jar'
+                sh 'java -jar target/my-app-${VERSION}-${VERSION_SUFFIX}.jar'
             }
         }
     }
