@@ -22,6 +22,8 @@ pipeline {
         stage('Build') {
             steps {
               echo "Building version: ${VERSION} with suffix: ${VERSION_RC}"
+              sh '${M2_HOME}/bin/mvn versions:set -DprocessAllModules -DnewVersion=${VERSION}-${VERSION_RC}'
+              sh '${M2_HOME}/bin/mvn versions:commit -DprocessAllModules'
               sh '${M2_HOME}/bin/mvn -B -DskipTests clean package'
             }
         }
@@ -39,7 +41,7 @@ pipeline {
         }
         stage('Smoke Test') {
             steps {
-              sh 'dotnet ./m3/src/Pi.Web/bin/Debug/netcoreapp3.1/Pi.Web.dll'
+              sh 'java -jar target/my-app-${VERSION}-${VERSION_RC}.jar'
             }
         }
     }
