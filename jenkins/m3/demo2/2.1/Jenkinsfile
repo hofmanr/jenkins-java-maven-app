@@ -4,6 +4,9 @@ library identifier: 'jenkins-pipeline-demo-lib@master',
 
 pipeline {
     agent any
+    tools {
+        maven 'Maven 3.8.6'
+    }
     stages {
         stage('Audit tools') {
             steps {
