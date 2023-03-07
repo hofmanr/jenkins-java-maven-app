@@ -19,4 +19,5 @@ pipeline {
 def void auditTools2(Map config) {
     def message = config.get("message")
     echo "message ${message}"
+    echo "${config.message}"
 }
