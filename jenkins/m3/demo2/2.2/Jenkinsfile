@@ -1,6 +1,6 @@
 #!groovy
-//library identifier: 'jenkins-pipeline-demo-lib@master',
-//        retriever: modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/hofmanr/jenkins-pipeline-demo-lib.git'])
+library identifier: 'jenkins-pipeline-demo-lib@master',
+        retriever: modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/hofmanr/jenkins-pipeline-demo-lib.git'])
 
 pipeline {
     agent any
@@ -16,8 +16,8 @@ pipeline {
     }
 }
 
-def void auditTools2(Map config) {
-    def message = config.get("message")
-    echo "message ${message}"
-    echo "${config.message}"
-}
+//def void auditTools2(Map config) {
+//    def message = config.get("message")
+//    echo "message ${message}"
+//    echo "${config.message}"
+//}
