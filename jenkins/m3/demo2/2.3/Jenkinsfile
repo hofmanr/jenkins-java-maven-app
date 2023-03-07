@@ -1,0 +1,65 @@
+#!groovy
+library identifier: 'jenkins-pipeline-demo-lib@master',
+        retriever: modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/hofmanr/jenkins-pipeline-demo-lib.git'])
+
+pipeline {
+    agent any
+    tools {
+        maven 'Maven 3.8.6'
+    }
+    parameters {
+        booleanParam(name: 'RC', defaultValue: false, description: 'Is this a Release Candidate?')
+    }
+    environment {
+        VERSION = "0.1.0"
+        VERSION_RC = "rc.2"
+    }
+    stages {
+        stage('Audit tools') {
+            steps {
+                auditTools()
+            }
+        }
+        stage('Build') {
+            environment {
+                VERSION_SUFFIX = getVersionSuffix(rcNumber: env.VERSION_RC, isReleaseCandidate: params.RC)
+            }
+            steps {
+                echo "Building version: ${VERSION} with suffix: ${VERSION_SUFFIX}"
+                sh '''
+                   ${M2_HOME}/bin/mvn versions:set -DprocessAllModules -DnewVersion=${VERSION}-${VERSION_SUFFIX}
+                   ${M2_HOME}/bin/mvn versions:commit -DprocessAllModules
+                   ${M2_HOME}/bin/mvn -B -DskipTests clean package
+                '''
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                sh '${M2_HOME}/bin/mvn test'
+            }
+            post {
+                always {
+                    dir('./target/surefire-reports') {
+                        junit '*.xml'
+                    }
+                }
+            }
+        }
+        stage('Smoke Test') {
+            environment {
+                VERSION_SUFFIX = getVersionSuffix(rcNumber: env.VERSION_RC, isReleaseCandidate: params.RC)
+            }
+            steps {
+                sh 'java -jar target/my-app-${VERSION}-${VERSION_SUFFIX}.jar'
+            }
+        }
+        stage('Publish') {
+            when {
+                expression { return params.RC }
+            }
+            steps {
+                archiveArtifacts 'target/*.jar'
+            }
+        }
+    }
+}
