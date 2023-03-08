@@ -3,9 +3,7 @@ library identifier: 'jenkins-pipeline-demo-lib@master',
         retriever: modernSCM([$class: 'GitSCMSource', remote: 'https://github.com/hofmanr/jenkins-pipeline-demo-lib.git'])
 
 pipeline {
-    agent {
-        label 'docker-agent-alpine'
-    }
+    agent any
     tools {
         maven 'Maven 3.8.6'
     }
