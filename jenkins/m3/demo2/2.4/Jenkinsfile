@@ -1,5 +1,5 @@
 #!groovy
-library('demo-library@master')
+library('demo-library')
 
 pipeline {
     agent any
