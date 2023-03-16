@@ -1,7 +1,8 @@
 pipeline {
     agent {
         docker {
-            image 'jenkins/agent-maven-jdk11'
+            image 'maven:3-alpine'
+            args '-v /root/.m2:/root/.m2'
         }
     }
     stages {
@@ -17,19 +18,24 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh '${M2_HOME}/bin/mvn -B -DskipTests clean package'
+                sh 'mvn -B -DskipTests clean package'
             }
         }
         stage('Unit Test') {
             steps {
                 dir("$WORKSPACE/m4/src") {
-                    sh '${M2_HOME}/bin/mvn test'
+                    sh 'mvn test'
+                }
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
                 }
             }
         }
         stage('Smoke Test') {
             steps {
-                sh 'java -jar target/my-app-1.0-SNAPSHOT.jar'
+                sh './jenkins/scripts/deliver.sh'
             }
         }
     }
