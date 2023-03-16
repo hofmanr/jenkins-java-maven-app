@@ -9,7 +9,7 @@ pipeline {
         stage('Verify') {
             steps {
                 sh '''
-                    git version
+                    mvn --version
                     java -version
                 '''
                 sh 'printenv'
