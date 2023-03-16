@@ -1,0 +1,36 @@
+pipeline {
+    agent {
+        docker {
+            image 'jenkins/agent-maven-jdk11'
+        }
+    }
+    stages {
+        stage('Verify') {
+            steps {
+                sh '''
+                    git version
+                    java -version
+                '''
+                sh 'printenv'
+                sh 'ls -l "$WORKSPACE"'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh '${M2_HOME}/bin/mvn -B -DskipTests clean package'
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                dir("$WORKSPACE/m4/src") {
+                    sh '${M2_HOME}/bin/mvn test'
+                }
+            }
+        }
+        stage('Smoke Test') {
+            steps {
+                sh 'java -jar target/my-app-1.0-SNAPSHOT.jar'
+            }
+        }
+    }
+}
