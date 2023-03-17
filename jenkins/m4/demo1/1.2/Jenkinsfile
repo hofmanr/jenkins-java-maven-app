@@ -2,7 +2,7 @@ pipeline {
     agent {
         dockerfile {
             dir 'jenkins/m4'
-            filename 'Dockerfile.sdk'
+            filename 'Dockerfile.agent'
             args '-v $HOME/.m2:/root/.m2'
         }
     }

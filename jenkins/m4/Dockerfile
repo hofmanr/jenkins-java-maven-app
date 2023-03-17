@@ -52,8 +52,6 @@ VOLUME /home/"${user}"/.jenkins
 VOLUME "${AGENT_WORKDIR}"
 WORKDIR /home/"${user}"
 
-ENTRYPOINT ["printenv"]
-
 LABEL \
     org.opencontainers.image.vendor="Jenkins project" \
     org.opencontainers.image.title="Official Jenkins Agent Base Docker image" \
