@@ -6,7 +6,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    image = docker.build("hofmanr/maven-jdk11:$BUILD_NUMBER", "--pull -f jenkins/m4/Dockerfile m4")
+                    image = docker.build("hofmanr/maven-jdk11:$BUILD_NUMBER", "--pull -f Dockerfile jenkins/m4")
                 }
             }
         }
